@@ -2,6 +2,54 @@ _base_ = [
     '../_base_/datasets/coco_detection.py',
     '../_base_/default_runtime.py'
 ]
+
+# Custom dataset
+# https://github.com/open-mmlab/mmdetection/blob/f78af7785ada87f1ced75a2313746e4ba3149760/docs/en/advanced_guides/customize_dataset.md
+dataset_type = 'CocoDataset'
+data_root = 'data/coco/'
+classes = ('bus', 'car', 'motorbike/cycler', 'pedestrian', 'pickup', 'trailer', 'truck', 'van')
+
+train_dataloader = dict(
+    batch_size=2,
+    num_workers=2,
+    dataset=dict(
+        type=dataset_type,
+        # explicitly add your class names to the field `metainfo`
+        metainfo=dict(classes=classes),
+        data_root=data_root,
+        ann_file='train/annotation_data',
+        data_prefix=dict(img='train/image_data')
+        )
+    )
+
+val_dataloader = dict(
+    batch_size=1,
+    num_workers=2,
+    dataset=dict(
+        type=dataset_type,
+        test_mode=True,
+        # explicitly add your class names to the field `metainfo`
+        metainfo=dict(classes=classes),
+        data_root=data_root,
+        ann_file='val/annotation_data',
+        data_prefix=dict(img='val/image_data')
+        )
+    )
+
+test_dataloader = dict(
+    batch_size=1,
+    num_workers=2,
+    dataset=dict(
+        type=dataset_type,
+        test_mode=True,
+        # explicitly add your class names to the field `metainfo`
+        metainfo=dict(classes=classes),
+        data_root=data_root,
+        ann_file='test/annotation_data',
+        data_prefix=dict(img='test/image_data')
+        )
+    )
+
 checkpoint_config = dict(interval=1)
 resume_from = None
 load_from = None
@@ -18,7 +66,7 @@ model = dict(
     type='CoDETR',
     backbone=dict(
         type='ViT',
-        img_size=1536,
+        img_size=800,
         pretrain_img_size=512,
         patch_size=16,
         embed_dim=1024,
@@ -59,7 +107,7 @@ model = dict(
     query_head=dict(
         type='CoDINOHead',
         num_query=1500,
-        num_classes=80,
+        num_classes=8,
         num_feature_levels=5,
         in_channels=2048,
         sync_cls_avg_factor=True,
@@ -137,7 +185,7 @@ model = dict(
             conv_out_channels=256,
             fc_out_channels=1024,
             roi_feat_size=7,
-            num_classes=80,
+            num_classes=8,
             bbox_coder=dict(
                 type='DeltaXYWHBBoxCoder',
                 target_means=[0., 0., 0., 0.],
@@ -150,7 +198,7 @@ model = dict(
             loss_bbox=dict(type='GIoULoss', loss_weight=10.0*num_dec_layer*lambda_2)))],
     bbox_head=[dict(
         type='CoATSSHead',
-        num_classes=80,
+        num_classes=8,
         in_channels=256,
         stacked_convs=1,
         feat_channels=256,
@@ -265,15 +313,10 @@ train_pipeline = [
             [
                 dict(
                     type='Resize',
-                    img_scale=[(480, 2400), (512, 2400), (544, 2400), (576, 2400),
-                               (608, 2400), (640, 2400), (672, 2400), (704, 2400),
-                               (736, 2400), (768, 2400), (800, 2400), (832, 2400),
-                               (864, 2400), (896, 2400), (928, 2400), (960, 2400),
-                               (992, 2400), (1024, 2400), (1056, 2400), (1088, 2400),
-                               (1120, 2400), (1152, 2400), (1184, 2400), (1216, 2400),
-                               (1248, 2400), (1280, 2400), (1312, 2400), (1344, 2400), 
-                               (1376, 2400), (1408, 2400), (1440, 2400), (1472, 2400),
-                               (1504, 2400), (1536, 2400)],
+                    img_scale=[(480, 1333), (512, 1333), (544, 1333),
+                               (576, 1333), (608, 1333), (640, 1333),
+                               (672, 1333), (704, 1333), (736, 1333),
+                               (768, 1333), (800, 1333)],
                     multiscale_mode='value',
                     keep_ratio=True)
             ],
@@ -292,15 +335,10 @@ train_pipeline = [
                     allow_negative_crop=True),
                 dict(
                     type='Resize',
-                    img_scale=[(480, 2400), (512, 2400), (544, 2400), (576, 2400),
-                               (608, 2400), (640, 2400), (672, 2400), (704, 2400),
-                               (736, 2400), (768, 2400), (800, 2400), (832, 2400),
-                               (864, 2400), (896, 2400), (928, 2400), (960, 2400),
-                               (992, 2400), (1024, 2400), (1056, 2400), (1088, 2400),
-                               (1120, 2400), (1152, 2400), (1184, 2400), (1216, 2400),
-                               (1248, 2400), (1280, 2400), (1312, 2400), (1344, 2400), 
-                               (1376, 2400), (1408, 2400), (1440, 2400), (1472, 2400),
-                               (1504, 2400), (1536, 2400)],
+                    img_scale=[(480, 1333), (512, 1333), (544, 1333),
+                               (576, 1333), (608, 1333), (640, 1333),
+                               (672, 1333), (704, 1333), (736, 1333),
+                               (768, 1333), (800, 1333)],
                     multiscale_mode='value',
                     override=True,
                     keep_ratio=True)
@@ -316,7 +354,7 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=(2048, 1280),
+        img_scale=(1333, 800),
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
