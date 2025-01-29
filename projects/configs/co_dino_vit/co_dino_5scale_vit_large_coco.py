@@ -4,55 +4,15 @@ _base_ = [
 ]
 
 # Custom dataset
-# https://github.com/open-mmlab/mmdetection/blob/f78af7785ada87f1ced75a2313746e4ba3149760/docs/en/advanced_guides/customize_dataset.md
+# https://github.com/Sense-X/Co-DETR/blob/main/docs/en/tutorials/customize_dataset.md
+
 dataset_type = 'CocoDataset'
-data_root = 'data/coco/'
 classes = ('bus', 'car', 'motorbike/cycler', 'pedestrian', 'pickup', 'trailer', 'truck', 'van')
-
-train_dataloader = dict(
-    batch_size=2,
-    num_workers=2,
-    dataset=dict(
-        type=dataset_type,
-        # explicitly add your class names to the field `metainfo`
-        metainfo=dict(classes=classes),
-        data_root=data_root,
-        ann_file='train/annotation_data',
-        data_prefix=dict(img='train/image_data')
-        )
-    )
-
-val_dataloader = dict(
-    batch_size=1,
-    num_workers=2,
-    dataset=dict(
-        type=dataset_type,
-        test_mode=True,
-        # explicitly add your class names to the field `metainfo`
-        metainfo=dict(classes=classes),
-        data_root=data_root,
-        ann_file='val/annotation_data',
-        data_prefix=dict(img='val/image_data')
-        )
-    )
-
-test_dataloader = dict(
-    batch_size=1,
-    num_workers=2,
-    dataset=dict(
-        type=dataset_type,
-        test_mode=True,
-        # explicitly add your class names to the field `metainfo`
-        metainfo=dict(classes=classes),
-        data_root=data_root,
-        ann_file='test/annotation_data',
-        data_prefix=dict(img='test/image_data')
-        )
-    )
+data_root = 'data/coco/'
 
 checkpoint_config = dict(interval=1)
 resume_from = None
-load_from = None
+load_from = 'models/pretrained_vitl_coco.pth' # https://huggingface.co/zongzhuofan/co-detr-vit-large-coco
 pretrained = None
 window_block_indexes = (
     list(range(0, 3)) + list(range(4, 7)) + list(range(8, 11)) + list(range(12, 15)) + list(range(16, 19)) +
@@ -66,15 +26,15 @@ model = dict(
     type='CoDETR',
     backbone=dict(
         type='ViT',
-        img_size=800,
+        img_size=512,
         pretrain_img_size=512,
-        patch_size=16,
+        patch_size=24,
         embed_dim=1024,
         depth=24,
         num_heads=16,
         mlp_ratio=4*2/3,
         drop_path_rate=0.4,
-        window_size=24,
+        window_size=16,
         window_block_indexes=window_block_indexes,
         residual_block_indexes=residual_block_indexes,
         qkv_bias=True,
@@ -354,7 +314,7 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=(1333, 800),
+        img_scale=(1333, 512),
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
@@ -366,14 +326,30 @@ test_pipeline = [
         ])
 ]
 
+#data = dict(
+#    samples_per_gpu=1,
+#    workers_per_gpu=1,
+#    train=dict(filter_empty_gt=False, pipeline=train_pipeline),
+#    val=dict(pipeline=test_pipeline),
+#    test=dict(pipeline=test_pipeline))
+
 data = dict(
     samples_per_gpu=1,
     workers_per_gpu=1,
-    train=dict(filter_empty_gt=False, pipeline=train_pipeline),
-    val=dict(pipeline=test_pipeline),
-    test=dict(pipeline=test_pipeline))
+    train=dict(
+        filter_empty_gt=False, pipeline=train_pipeline,
+        type=dataset_type,
+        classes=classes),
+    val=dict(
+        pipeline=test_pipeline,
+        type=dataset_type,
+        classes=classes),
+    test=dict(
+        pipeline=test_pipeline,
+        type=dataset_type,
+        classes=classes))
 
-evaluation = dict(metric='bbox')
+evaluation = dict(metric='bbox', save_best = 'bbox_mAP')
 
 # learning policy
 lr_config = dict(
