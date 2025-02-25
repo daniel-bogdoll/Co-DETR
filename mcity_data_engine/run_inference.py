@@ -61,12 +61,14 @@ def main():
         print(f"Collecting samples from {data_folder}")
         for root, dirs, files in os.walk(data_folder):
             for file in files:
-                if file.endswith(".jpg"):
+                if file.endswith(".jpg") or file.endswith(".png"):
                     filepath = os.path.join(root, file)
                     jpg_filepaths.append(filepath)
 
-        checkpoint_path = os.path.join("hf_models", args.model_checkpoint)
+        print(f"Collected {len(jpg_filepaths)} samples")
 
+        checkpoint_path = os.path.join("hf_models", args.model_checkpoint)
+        print(f"Loading model checkpoint {checkpoint_path}")
         model = init_detector(args.config_file, checkpoint_path, device=args.device)
 
         os.makedirs(args.results_folder, exist_ok=True)
