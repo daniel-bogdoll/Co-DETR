@@ -4,10 +4,7 @@ import shutil
 
 
 def move_best_model(config_file, dataset_name):
-    """
-    After training, move the best file from the standard output folder into a dedicated folder
-    for the used dataset and Co-DETR config
-    """
+    """Move best model file to dedicated dataset folder and rename it"""
     output_folder_codetr = "output"
     param_config_name = os.path.splitext(os.path.basename(config_file))[0]
 
@@ -40,9 +37,7 @@ def move_best_model(config_file, dataset_name):
 
 
 def clear_output_folder():
-    """
-    After saving the best model file, clear the default output folder
-    """
+    """Remove all files from output directory"""
     try:
         if os.path.exists("output"):
             # Remove only the files directly in the 'output' directory

@@ -8,8 +8,9 @@ from mmdet.apis import inference_detector, init_detector
 from tqdm import tqdm
 
 
-# JSON encoder to handle NumPy arrays
 class NumpyEncoder(json.JSONEncoder):
+    """JSON encoder that handles NumPy arrays"""
+
     def default(self, obj):
         if isinstance(obj, np.ndarray):
             return obj.tolist()
@@ -17,11 +18,10 @@ class NumpyEncoder(json.JSONEncoder):
 
 
 def main():
+    """Run Co-DETR inference on images and save results as JSON"""
 
     # Argument parsing
     parser = argparse.ArgumentParser(description="Run inference with Co-DETR model")
-
-    # Add arguments
     parser.add_argument(
         "--config_file",
         type=str,
@@ -65,7 +65,7 @@ def main():
                     filepath = os.path.join(root, file)
                     jpg_filepaths.append(filepath)
 
-        checkpoint_path = os.path.join("models", args.model_checkpoint)
+        checkpoint_path = os.path.join("hf_models", args.model_checkpoint)
 
         model = init_detector(args.config_file, checkpoint_path, device=args.device)
 
